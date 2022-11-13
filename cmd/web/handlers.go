@@ -2,55 +2,38 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
 
-	// if path doesnt match '/', return 404 error
+	// if url is not strictly '/', return
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-
-	w.Write([]byte("Hello from Snippetbox!"))
+	w.Write([]byte("Hello from Snippetbox"))
 }
 
-// view snippet
-func snippetView(w http.ResponseWriter, r *http.Request){
+func snippetView(w http.ResponseWriter, r *http.Request) {
 
-	// extract id from query and convert to int
+	// check for id parameter on url
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
-
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-// create snippet
 func snippetCreate(w http.ResponseWriter, r *http.Request) {
 
-	// if method isnt POST, 405 error
+	// check if method is POST
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	w.Write([]byte("Create a new snippet..."))
-}
-
-func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
-
-	log.Println("Starting server on :4000")
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatal(err)
 }
