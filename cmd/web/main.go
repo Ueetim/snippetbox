@@ -7,13 +7,16 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Ueetim/snippetbox/internal/models"
+
 	_"github.com/go-sql-driver/mysql"
 )
 
 // for application-wide dependencies
 type application struct {
-	errorLog *log.Logger
-	infoLog *log.Logger
+	errorLog 	*log.Logger
+	infoLog 	*log.Logger
+	snippets	*models.SnippetModel
 }
 
 func main() {
@@ -41,8 +44,9 @@ func main() {
 
 	// init a new instance of application struct
 	app := &application{
-		errorLog: errorLog,
-		infoLog: infoLog,
+		errorLog: 	errorLog,
+		infoLog: 	infoLog,
+		snippets:	&models.SnippetModel{DB: db},
 	}
 
 	srv := &http.Server {
