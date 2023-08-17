@@ -3,20 +3,22 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/Ueetim/snippetbox/internal/models"
 
-	_"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // for application-wide dependencies
 type application struct {
-	errorLog 	*log.Logger
-	infoLog 	*log.Logger
-	snippets	*models.SnippetModel
+	errorLog 		*log.Logger
+	infoLog 		*log.Logger
+	snippets		*models.SnippetModel
+	templateCache	map[string]*template.Template
 }
 
 func main() {
@@ -42,11 +44,18 @@ func main() {
 
 	defer db.Close()
 
+	// init a new template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	// init a new instance of application struct
 	app := &application{
-		errorLog: 	errorLog,
-		infoLog: 	infoLog,
-		snippets:	&models.SnippetModel{DB: db},
+		errorLog: 		errorLog,
+		infoLog: 		infoLog,
+		snippets:		&models.SnippetModel{DB: db},
+		templateCache: 	templateCache,
 	}
 
 	srv := &http.Server {
