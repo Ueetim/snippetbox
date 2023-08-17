@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // write error message and stack trace to the errorlog, then send generic 500 error to user
@@ -25,7 +27,7 @@ func (app *application) notFound(w http.ResponseWriter) {
 }
 
 // render templates from cache
-func (app *application) render (w http.ResponseWriter, status int, page string, data *templateData) {
+func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {
 	// retrieve appropriate template from cache based on page name
 	ts, ok := app.templateCache[page]
 	if !ok {
@@ -34,12 +36,24 @@ func (app *application) render (w http.ResponseWriter, status int, page string, 
 		return
 	}
 
+	// init a buffer
+	buf := new(bytes.Buffer)
+
+	// write template to the buffer (to catch runtime errors)
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 	// write provided HTTP status code
 	w.WriteHeader(status)
 
-	// execute template set and write response body
-	err := ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, err)
+	// write the contents of the buffer to the responseWriter
+	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
 	}
 }
